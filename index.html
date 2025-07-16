@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TapSwap</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #1c1c1e;
+            --primary-color: #ffd700;
+            --secondary-color: #2c2c2e;
+            --text-color: #ffffff;
+            --text-secondary-color: #8e8e93;
+            --cat-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            --nav-height: 60px;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            padding-bottom: var(--nav-height);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page.active {
+            display: flex;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height);
+            background-color: var(--secondary-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #3a3a3c;
+            max-width: 500px;
+            margin: 0 auto;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            fill: currentColor;
+        }
+        
+        .nav-btn.active {
+            color: var(--primary-color);
+        }
+
+        /* Tap Page */
+        #tap-page {
+            justify-content: space-around;
+        }
+        .score-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+        .cat-container {
+            position: relative;
+        }
+        #cat {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: var(--cat-shadow);
+        }
+        #cat:active {
+            transform: scale(0.95);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+        .plus-one {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            opacity: 0;
+            animation: floatUp 1s ease-out;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .energy-container {
+            width: 80%;
+            text-align: center;
+        }
+        .energy-bar-bg {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        #energy-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #fceabb, var(--primary-color));
+            border-radius: 8px;
+            width: 100%;
+            transition: width 0.2s ease-in-out;
+        }
+        #energy-level-text {
+            margin-top: 5px;
+            font-size: 1rem;
+            color: var(--text-secondary-color);
+        }
+
+        /* Profile Page */
+        #profile-page {
+            justify-content: flex-start;
+            gap: 20px;
+        }
+        .profile-card, .profile-stats, .referral-card {
+            background-color: var(--secondary-color);
+            width: 90%;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .profile-stats p, .referral-card p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: var(--text-secondary-color);
+        }
+        .profile-stats span, .referral-card span {
+            color: var(--text-color);
+            font-weight: 500;
+            float: right;
+        }
+
+        /* Task Page */
+        #task-page {
+            justify-content: flex-start;
+            padding-top: 20px;
+            gap: 15px;
+            overflow-y: auto;
+            height: calc(100% - 40px);
+        }
+        .task-card {
+            background-color: var(--secondary-color);
+            width: 90%;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .task-icon {
+            font-size: 24px;
+        }
+        .task-details h4 { margin: 0; font-size: 1rem; }
+        .task-details p { margin: 2px 0 0; font-size: 0.8rem; color: var(--primary-color); }
+        .task-btn {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .task-btn:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* Withdraw Page */
+        #withdraw-page {
+            justify-content: flex-start;
+            gap: 20px;
+            padding-top: 20px;
+        }
+        .withdraw-form {
+            background-color: var(--secondary-color);
+            width: 90%;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .withdraw-form h3 {
+            margin: 0 0 10px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        .withdraw-form label {
+            font-size: 0.9rem;
+            color: var(--text-secondary-color);
+        }
+        .withdraw-form select, .withdraw-form input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        .withdraw-btn {
+             background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        #withdrawal-details { display: none; }
+        .success-message {
+            margin-top: 15px;
+            color: #4caf50;
+            text-align: center;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- Profile Page -->
+            <div id="profile-page" class="page">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-pic"></div>
+                        <span id="profile-name" class="profile-name">Telegram User</span>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <p>Total Points: <span id="profile-points">0</span></p>
+                    <p>Joining Date: <span id="profile-join-date">N/A</span></p>
+                </div>
+                <div class="referral-card">
+                    <p>Referral Link:</p>
+                    <span id="profile-referral">t.me/your_bot?start=...</span>
+                </div>
+            </div>
+
+            <!-- Tap Page -->
+            <div id="tap-page" class="page active">
+                <span class="score-display" id="score">0</span>
+                <div class="cat-container">
+                    <div id="cat">🐱</div>
+                </div>
+                <div class="energy-container">
+                    <div class="energy-bar-bg">
+                        <div id="energy-bar"></div>
+                    </div>
+                    <span id="energy-level-text">100 / 100</span>
+                </div>
+            </div>
+
+            <!-- Task Page -->
+            <div id="task-page" class="page">
+                <!-- Tasks will be generated by JS -->
+            </div>
+
+            <!-- Withdraw Page -->
+            <div id="withdraw-page" class="page">
+                <form id="withdraw-form" class="withdraw-form">
+                    <h3>Withdraw Points</h3>
+                    <p>Your Points: <span id="withdraw-points">0</span></p>
+                    <div>
+                        <label for="withdraw-method">Payment Method</label>
+                        <select id="withdraw-method">
+                            <option value="paypal">PayPal</option>
+                            <option value="wire">Wired Transfer</option>
+                            <option value="crypto">Crypto (USDT)</option>
+                        </select>
+                    </div>
+                    <div id="withdrawal-details">
+                        <!-- Dynamic fields based on method -->
+                    </div>
+                    <div>
+                        <label for="withdraw-amount">Amount</label>
+                        <input type="number" id="withdraw-amount" placeholder="Enter points to withdraw">
+                    </div>
+                    <button type="submit" class="withdraw-btn">Request Withdrawal</button>
+                    <div id="withdraw-success-message" class="success-message" style="display:none;"></div>
+                </form>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn" data-page="profile-page">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                Profile
+            </button>
+            <button class="nav-btn active" data-page="tap-page">
+                <svg viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L8.43 7L12 3.43L10.57 2L9.14 3.43L3.43 9.14L2 10.57L3.43 12L7 8.43L15.57 17L12 20.57L13.43 22L14.86 20.57L20.57 14.86Z"/></svg>
+                Tap
+            </button>
+            <button class="nav-btn" data-page="task-page">
+                <svg viewBox="0 0 24 24"><path d="M22 7V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2m-4 5l-4-2v4Z"/></svg>
+                Tasks
+            </button>
+            <button class="nav-btn" data-page="withdraw-page">
+                <svg viewBox="0 0 24 24"><path d="M5 21V3h14v18l-7-3.5L5 21M7 5v12.2l5-2.19l5 2.19V5H7Z"/></svg>
+                Withdraw
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATABASE (LOCAL STORAGE) ---
+            let db = {
+                points: 0,
+                energy: 100,
+                maxEnergy: 100,
+                energyPerTap: 1,
+                energyRefillRate: 1, // per second
+                user: {
+                    name: "Telegram User",
+                    joinDate: new Date().toLocaleDateString(),
+                    referralCode: `ref_${Math.random().toString(36).substr(2, 9)}`,
+                },
+                tasks: [
+                    { id: 1, text: "Watch Video 1", reward: 1000, completed: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                    { id: 2, text: "Watch Video 2", reward: 1000, completed: false, url: "https://www.youtube.com/watch?v=34Na4j8AVgA" },
+                    { id: 3, text: "Watch Video 3", reward: 1000, completed: false, url: "https://www.youtube.com/watch?v=u6NOTogsw8Q" },
+                    { id: 4, text: "Watch Video 4", reward: 1000, completed: false, url: "https://www.youtube.com/watch?v=C0DPdy98e4c" },
+                    { id: 5, text: "Watch Video 5", reward: 1000, completed: false, url: "https://www.youtube.com/watch?v=h6fcK_fRYaI" },
+                ]
+            };
+
+            const saveData = () => {
+                localStorage.setItem('tapswap_db', JSON.stringify(db));
+            };
+
+            const loadData = () => {
+                const savedDb = localStorage.getItem('tapswap_db');
+                if (savedDb) {
+                    db = JSON.parse(savedDb);
+                } else {
+                    saveData(); // Save initial db if none exists
+                }
+            };
+
+            // --- UI ELEMENTS ---
+            const pages = document.querySelectorAll('.page');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            
+            // Tap Page
+            const scoreDisplay = document.getElementById('score');
+            const catElement = document.getElementById('cat');
+            const catContainer = document.querySelector('.cat-container');
+            const energyBar = document.getElementById('energy-bar');
+            const energyLevelText = document.getElementById('energy-level-text');
+
+            // Profile Page
+            const profileName = document.getElementById('profile-name');
+            const profilePic = document.querySelector('.profile-pic');
+            const profilePoints = document.getElementById('profile-points');
+            const profileJoinDate = document.getElementById('profile-join-date');
+            const profileReferral = document.getElementById('profile-referral');
+
+            // Task Page
+            const taskPage = document.getElementById('task-page');
+
+            // Withdraw Page
+            const withdrawForm = document.getElementById('withdraw-form');
+            const withdrawPoints = document.getElementById('withdraw-points');
+            const withdrawMethod = document.getElementById('withdraw-method');
+            const withdrawalDetails = document.getElementById('withdrawal-details');
+            const withdrawSuccessMessage = document.getElementById('withdraw-success-message');
+            const withdrawAmountInput = document.getElementById('withdraw-amount');
+
+            // --- APP LOGIC ---
+            const updateUI = () => {
+                // Tap Page
+                scoreDisplay.innerText = db.points.toLocaleString();
+                energyLevelText.innerText = `${Math.floor(db.energy)} / ${db.maxEnergy}`;
+                energyBar.style.width = `${(db.energy / db.maxEnergy) * 100}%`;
+
+                // Profile Page
+                profileName.innerText = db.user.name;
+                profilePic.innerText = db.user.name.charAt(0).toUpperCase();
+                profilePoints.innerText = db.points.toLocaleString();
+                profileJoinDate.innerText = db.user.joinDate;
+                profileReferral.innerText = `t.me/tapswap_bot?start=${db.user.referralCode}`;
+
+                // Withdraw Page
+                withdrawPoints.innerText = db.points.toLocaleString();
+            };
+
+            // Navigation
+            const switchPage = (pageId) => {
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+
+                navButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.page === pageId);
+                });
+            };
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    switchPage(button.dataset.page);
+                });
+            });
+
+            // Tap Logic
+            catElement.addEventListener('click', (e) => {
+                if (db.energy >= db.energyPerTap) {
+                    db.points += 1;
+                    db.energy -= db.energyPerTap;
+                    updateUI();
+                    saveData();
+
+                    // Show +1 animation
+                    const plusOne = document.createElement('div');
+                    plusOne.className = 'plus-one';
+                    plusOne.innerText = '+1';
+                    plusOne.style.left = `${e.clientX - catContainer.getBoundingClientRect().left - 15}px`;
+                    plusOne.style.top = `${e.clientY - catContainer.getBoundingClientRect().top - 30}px`;
+                    catContainer.appendChild(plusOne);
+                    setTimeout(() => plusOne.remove(), 1000);
+                }
+            });
+
+            // Energy Refill Logic
+            setInterval(() => {
+                if (db.energy < db.maxEnergy) {
+                    db.energy = Math.min(db.maxEnergy, db.energy + db.energyRefillRate);
+                    updateUI();
+                    saveData();
+                }
+            }, 1000);
+
+            // Task Logic
+            const renderTasks = () => {
+                taskPage.innerHTML = ''; // Clear existing tasks
+                db.tasks.forEach(task => {
+                    const taskCard = document.createElement('div');
+                    taskCard.className = 'task-card';
+                    taskCard.innerHTML = `
+                        <div class="task-info">
+                            <div class="task-icon">📺</div>
+                            <div class="task-details">
+                                <h4>${task.text}</h4>
+                                <p>+${task.reward.toLocaleString()} points</p>
+                            </div>
+                        </div>
+                        <button class="task-btn" data-task-id="${task.id}" ${task.completed ? 'disabled' : ''}>
+                            ${task.completed ? 'Completed' : 'Go'}
+                        </button>
+                    `;
+                    taskPage.appendChild(taskCard);
+                });
+                
+                document.querySelectorAll('.task-btn').forEach(button => {
+                    if(!button.disabled) {
+                        button.addEventListener('click', completeTask);
+                    }
+                });
+            };
+
+            const completeTask = (e) => {
+                const taskId = parseInt(e.target.dataset.taskId);
+                const task = db.tasks.find(t => t.id === taskId);
+                
+                if (task && !task.completed) {
+                    // Simulate watching the video
+                    alert(`Opening task: ${task.text}.\nIn a real app, you would be redirected to: ${task.url}\n\nYou will receive ${task.reward} points after a short delay.`);
+                    
+                    // Simulate completion after a delay
+                    e.target.innerText = 'Checking...';
+                    e.target.disabled = true;
+
+                    setTimeout(() => {
+                        task.completed = true;
+                        db.points += task.reward;
+                        saveData();
+                        updateUI();
+                        renderTasks(); // Re-render to update the button state permanently
+                    }, 3000); // 3-second delay to simulate watching
+                }
+            };
+
+            // Withdraw Logic
+            const updateWithdrawalDetails = () => {
+                const method = withdrawMethod.value;
+                withdrawalDetails.style.display = 'block';
+                let html = '';
+                if (method === 'paypal') {
+                    html = `<label for="paypal-email">PayPal Email</label><input type="email" id="paypal-email" placeholder="user@example.com" required>`;
+                } else if (method === 'wire') {
+                    html = `
+                        <label for="bank-name">Bank Name</label><input type="text" id="bank-name" placeholder="Global Bank" required>
+                        <label for="account-number">Account Number</label><input type="text" id="account-number" placeholder="123456789" required>
+                        <label for="routing-number">Routing Number</label><input type="text" id="routing-number" placeholder="987654321" required>
+                    `;
+                } else if (method === 'crypto') {
+                    html = `<label for="usdt-address">USDT (TRC-20) Address</label><input type="text" id="usdt-address" placeholder="T..." required>`;
+                }
+                withdrawalDetails.innerHTML = html;
+            };
+
+            withdrawMethod.addEventListener('change', updateWithdrawalDetails);
+
+            withdrawForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const amount = parseInt(withdrawAmountInput.value);
+                if (isNaN(amount) || amount <= 0) {
+                    alert("Please enter a valid amount.");
+                    return;
+                }
+                if (amount > db.points) {
+                    alert("You don't have enough points.");
+                    return;
+                }
+
+                // Collect details for simulated withdrawal
+                const method = withdrawMethod.value;
+                let details = { method, amount };
+                const inputs = withdrawalDetails.querySelectorAll('input');
+                let allFilled = true;
+                inputs.forEach(input => {
+                    if(!input.value) allFilled = false;
+                    details[input.id] = input.value;
+                });
+
+                if(!allFilled){
+                    alert("Please fill in all withdrawal details.");
+                    return;
+                }
+                
+                // Simulate a withdrawal request to localhost (logging to console)
+                console.log("--- WITHDRAWAL REQUEST (Simulated Localhost) ---");
+                console.log(JSON.stringify(details, null, 2));
+                console.log("-------------------------------------------------");
+                
+                db.points -= amount;
+                saveData();
+                updateUI();
+                withdrawForm.reset();
+                withdrawalDetails.innerHTML = '';
+                withdrawalDetails.style.display = 'none';
+                
+                withdrawSuccessMessage.innerText = `Successfully requested withdrawal of ${amount.toLocaleString()} points!`;
+                withdrawSuccessMessage.style.display = 'block';
+                setTimeout(() => {
+                    withdrawSuccessMessage.style.display = 'none';
+                }, 5000);
+
+            });
+
+            // --- INITIALIZATION ---
+            const init = () => {
+                loadData();
+                updateUI();
+                renderTasks();
+                updateWithdrawalDetails();
+                // To prevent image drag ghosting
+                document.getElementById('cat').addEventListener('dragstart', (e) => e.preventDefault());
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>
